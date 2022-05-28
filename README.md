@@ -39,13 +39,61 @@ const MyComponent = {
     onmount: /* Object */
     view: /* func */
 }
+
+
+```
+### launch function on component is on the Dom
+
+Use `onstart` key.
+```javascript
+
+const MyComp = {
+  onstart:()=>{
+    // write yours func
+  },
+  view: (state)=> l({},'hello')
+}
+
+export k(MyComp) 
 ```
 
-### WIP Import componenent
+### launch function on component initialisation
 
-export k(component) ou dans le onstart pour passer des props.
+Use `onmount` key. The functions on `onmount` must have a return.
+```javascript
 
+const MyComp = {
+  onmount:()=>{
+    // write yours func
+  },
+  view: (state)=> l({},'hello')
+}
 
-### onmount
+export k(MyComp) 
+```
 
-onmount must have a return
+### Export component
+
+#### simple method
+Your component can be export with `k` function. 
+```javascript
+const MyComp = {
+view: (state)=> l({},'hello')
+}
+export k(MyComp) 
+```
+
+#### with props method
+If you give parent state on your component
+```javascript
+// import Button component
+
+const MyComp = {
+  onstart:()=>{
+    MyComp.Button = k(MyButton,MyComp.state)
+  },
+  view: (state)=> l({},MyComp.Button)
+}
+
+export k(MyComp) 
+```
