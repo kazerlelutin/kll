@@ -1,6 +1,6 @@
 {
   "name": "kll-lib",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "micro framework for render HTML with Javascript.",
   "main": "index.mjs",
   "directories": {
