@@ -1,0 +1,10 @@
+{
+  "name": "@kll/core",
+  "version": "0.1.0",
+  "description": "Noyau du framework KLL",
+  "author": {
+    "email": "b@bouteiller.contact",
+    "url": "https://ko-fi.com/kazerlelutin",
+    "name": "Kazerlelutin"
+  }
+}
