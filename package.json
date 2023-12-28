@@ -1,0 +1,13 @@
+{
+  "name": "kll",
+  "version": "0.1.0",
+  "description": "monorepo for kll's projects",
+  "author": {
+    "email": "b@bouteiller.contact",
+    "url": "https://ko-fi.com/kazerlelutin",
+    "name": "Kazerlelutin"
+  },
+  "dependencies": {
+    "lerna": "^8.0.1"
+  }
+}
