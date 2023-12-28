@@ -1,7 +1,8 @@
 {
   "name": "@kll_/basic",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Plugin de fonctionnalités de base pour le framework KLL",
+  "main": "index.js",
   "dependencies": {
     "@kll_/core": "^0.1.0"
   },
@@ -10,5 +11,6 @@
     "url": "https://ko-fi.com/kazerlelutin",
     "name": "Kazerlelutin"
   },
+  "homepage": "https://github.com/kazerlelutin/kll/blob/main/%40kll_/basic/README.md",
   "gitHead": "7bcb8434850a0cba103e9dc6fe9e55c1c3e8e030"
 }

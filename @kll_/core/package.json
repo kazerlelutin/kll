@@ -1,8 +1,9 @@
 {
   "name": "@kll_/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Core library for KLL",
   "scope": "@kll_",
+  "main": "index.mjs",
   "author": {
     "email": "b@bouteiller.contact",
     "url": "https://ko-fi.com/kazerlelutin",
