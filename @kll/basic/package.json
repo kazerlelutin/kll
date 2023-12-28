@@ -2,7 +2,6 @@
   "name": "@kll/basic",
   "version": "0.1.0",
   "description": "Plugin de fonctionnalités de base pour le framework KLL",
-  "private": "false",
   "dependencies": {
     "@kll/core": "^0.1.0"
   },
