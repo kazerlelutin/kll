@@ -1,14 +1,15 @@
 {
-    "name": "@kll/basic",
-    "version": "0.1.0",
-    "description": "Plugin de fonctionnalités de base pour le framework KLL",
-    "dependencies": {
-        "@kll/core": "^0.1.0"
-    },
-    "author": {
-        "email": "b@bouteiller.contact",
-        "url": "https://ko-fi.com/kazerlelutin",
-        "name": "Kazerlelutin"
-    },
-    "gitHead": "706ad847a70c65e3607526bd867292d708bf16ea"
+  "name": "@kll/basic",
+  "version": "0.1.0",
+  "description": "Plugin de fonctionnalités de base pour le framework KLL",
+  "private": "false",
+  "dependencies": {
+    "@kll/core": "^0.1.0"
+  },
+  "author": {
+    "email": "b@bouteiller.contact",
+    "url": "https://ko-fi.com/kazerlelutin",
+    "name": "Kazerlelutin"
+  },
+  "gitHead": "7bcb8434850a0cba103e9dc6fe9e55c1c3e8e030"
 }
