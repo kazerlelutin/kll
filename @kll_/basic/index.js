@@ -1,4 +1,4 @@
-import { KLLPlugin } from "@kll/core"
+import { KLLPlugin } from "@kll_/core"
 
 export class CreateComponentPlugin extends KLLPlugin {
   constructor(kllInstance) {

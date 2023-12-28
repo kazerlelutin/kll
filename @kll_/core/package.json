@@ -1,0 +1,28 @@
+{
+  "name": "@kll_/core",
+  "version": "0.1.0",
+  "description": "Core library for KLL",
+  "scope": "@kll_",
+  "author": {
+    "email": "b@bouteiller.contact",
+    "url": "https://ko-fi.com/kazerlelutin",
+    "name": "Kazerlelutin"
+  },
+  "directories": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kazerlelutin/kll.git"
+  },
+  "keywords": [
+    "dom"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kazerlelutin/kll/issues"
+  },
+  "homepage": "https://github.com/kazerlelutin/kll#readme",
+  "gitHead": "7bcb8434850a0cba103e9dc6fe9e55c1c3e8e030"
+}

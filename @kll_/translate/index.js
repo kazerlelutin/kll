@@ -1,4 +1,4 @@
-import { KLLPlugin } from "@kll/core"
+import { KLLPlugin } from "@kll_/core"
 export class TranslatePlugin extends KLLPlugin {
   /**
    * Constructs an instance of TranslatePlugin.

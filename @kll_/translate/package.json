@@ -1,7 +1,10 @@
 {
-  "name": "@kll/core",
+  "name": "@kll_/translate",
   "version": "0.1.0",
-  "description": "Noyau du framework KLL",
+  "description": "Plugin de traduction pour le framework KLL",
+  "dependencies": {
+    "@kll_/core": "^0.1.0"
+  },
   "author": {
     "email": "b@bouteiller.contact",
     "url": "https://ko-fi.com/kazerlelutin",

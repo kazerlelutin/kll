@@ -1,9 +1,9 @@
 {
-  "name": "@kll/translate",
+  "name": "@kll_/basic",
   "version": "0.1.0",
-  "description": "Plugin de traduction pour le framework KLL",
+  "description": "Plugin de fonctionnalités de base pour le framework KLL",
   "dependencies": {
-    "@kll/core": "^0.1.0"
+    "@kll_/core": "^0.1.0"
   },
   "author": {
     "email": "b@bouteiller.contact",
