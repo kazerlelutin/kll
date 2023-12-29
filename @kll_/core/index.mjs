@@ -118,9 +118,8 @@ export class KLL {
    * @param {string} path - The path to identify which page to inject.
    */
   async injectPage(path) {
-    const routes = document.querySelector(this.id).routes
     const { template } = this.parseRoute(path)
-    const page = routes[template]
+    const page = this.routes[template]
 
     if (page) {
       const appElement = document.querySelector(this.id)
