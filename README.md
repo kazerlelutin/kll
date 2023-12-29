@@ -2,4 +2,4 @@
 
 _micro framework for render HTML with Javascript._
 
-WIP
+[READ the CORE DOC](./@kll_/core/README.md)
