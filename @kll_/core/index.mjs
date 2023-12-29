@@ -119,7 +119,7 @@ export class KLL {
    */
   async injectPage(path) {
     const routes = document.querySelector(this.id).routes
-    const { template } = parseRoute(path)
+    const { template } = this.parseRoute(path)
     const page = routes[template]
 
     if (page) {
