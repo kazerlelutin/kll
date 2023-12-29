@@ -55,6 +55,7 @@ export class KLL {
    * @param {KLLPlugin[]} [plugins=[]] - Plugins to be applied to the instance.
    */
   constructor(config) {
+    this.routePrefix = config.routePrefix || ""
     this.id = config.id
     this.routes = config.routes
     this.ctrlPath = config.ctrlPath || "./ctrl/"
@@ -84,7 +85,32 @@ export class KLL {
       return
     }
     appElement.routes = this.routes
-    this.injectPage(window.location.pathname)
+    this.injectPage()
+  }
+
+  parseRoute(href) {
+    const route =
+      href || window.location.hash.replace(this.routePrefix, "") || window.location.pathname
+    const routeParts = route.split("/").splice(1)
+    const routeKeys = Object.keys(pages)
+    const params = {}
+
+    const template = routeKeys.reduce((acc, route) => {
+      const parts = route.split("/")
+
+      if (parts.length !== routeParts.length) return acc
+
+      parts.forEach((part, i) => {
+        if (part.startsWith(":")) {
+          params[part.substring(1)] = routeParts[i]
+        } else if (part === routeParts[i]) {
+          acc = route
+        }
+      })
+      return acc
+    }, "index")
+
+    return { params, template, route }
   }
 
   /**
@@ -92,10 +118,12 @@ export class KLL {
    * @param {string} path - The path to identify which page to inject.
    */
   async injectPage(path) {
-    const routes = document.querySelector("#app").routes
-    const page = routes[path]
+    const routes = document.querySelector(this.id).routes
+    const { template } = parseRoute(path)
+    const page = routes[template]
+
     if (page) {
-      const appElement = document.querySelector("#app")
+      const appElement = document.querySelector(this.id)
       appElement.innerHTML = page
       await this.kllT()
     }
