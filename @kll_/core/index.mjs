@@ -89,13 +89,14 @@ export class KLL {
 
   parseRoute(href) {
     const route = href || window.location.pathname
-    const routeParts = route.split("/")
+    const routeParts = route.split("/").splice(1)
     const routeKeys = Object.keys(this.routes)
     const params = {}
 
     const template = routeKeys.reduce((acc, route) => {
-      const parts = route.split("/")
+      const parts = route.split("/").splice(1)
 
+      if (parts.length !== routeParts.length) return acc
       parts.forEach((part, i) => {
         if (part.startsWith(":")) {
           params[part.substring(1)] = routeParts[i]
@@ -116,11 +117,13 @@ export class KLL {
   async injectPage(path) {
     const { template } = this.parseRoute(path)
     const page = this.routes[template]
-
+    const appElement = document.querySelector(`#${this.id}`)
     if (page) {
-      const appElement = document.querySelector(`#${this.id}`)
       appElement.innerHTML = page
       await this.kllT()
+    } else {
+      const keys = Object.keys(this.routes)
+      appElement.innerHTML = this.routes[keys[0]]
     }
   }
 
