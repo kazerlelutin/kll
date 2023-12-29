@@ -59,6 +59,7 @@ export class KLL {
     this.routes = config.routes
     this.ctrlPath = config.ctrlPath || "./ctrl/"
     this.templatePath = config.templatePath || "./templates/"
+    this.cleanupCollection = []
     this.plugins = {}
     const plugins = config.plugins || []
 
@@ -74,6 +75,7 @@ export class KLL {
         console.warn(`the plugin ${PluginClass.name} is not a KLLPlugin.`)
       }
     })
+
     this._init()
   }
 
@@ -84,6 +86,7 @@ export class KLL {
       return
     }
     appElement.routes = this.routes
+
     this.injectPage()
   }
 
@@ -118,6 +121,7 @@ export class KLL {
     const { template } = this.parseRoute(path)
     const page = this.routes[template]
     const appElement = document.querySelector(`#${this.id}`)
+    this.cleanUp()
     if (page) {
       appElement.innerHTML = page
       await this.kllT()
@@ -181,6 +185,14 @@ export class KLL {
       element.removeEventListener(k, element._listeners[k])
     })
     element._listeners = {}
+    element?.cleanUp?.()
+  }
+
+  cleanUp() {
+    this.cleanupCollection.forEach((el) => {
+      el?.()
+    })
+    this.cleanupCollection = []
   }
 
   /**
@@ -202,6 +214,7 @@ export class KLL {
     Object.keys(element._listeners).forEach((k) => {
       element.removeEventListener(k, element._listeners[k])
     })
+    this.element?.cleanUp?.()
     element._listeners = {}
   }
 
@@ -247,7 +260,9 @@ export class KLL {
   async handleTriggerState(key, value, name) {
     const elements = document.querySelectorAll(`[kll-b*='${name}.${key}']`)
     for (const element of elements) {
-      element?.render?.({ key, value, name })
+      const proxy = { key, value, name }
+      element?.cleanUp?.(proxy)
+      element?.render?.(proxy)
     }
   }
 
@@ -385,6 +400,11 @@ export class KLL {
 
     if (ctrl.onInit) {
       container.onInit = () => ctrl.onInit(state, container)
+    }
+
+    if (ctrl.cleanUp) {
+      container.cleanUp = this.cleanupCollection.push(() => ctrl.cleanUp(state, container))
+      container.cleanUp = (proxy) => ctrl.cleanUp(state, container, proxy)
     }
 
     for (const method of methods) {

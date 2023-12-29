@@ -63,6 +63,50 @@ const config = {
 const app = new KLL(config)
 ```
 
+### Managing Component Lifecycle with cleanUp
+
+In the KLL framework, each component can have a `cleanUp` function defined in its controller. This function is designed to be called before the component is re-rendered or before the DOM is updated. It provides a way to perform necessary cleanup operations, like unsubscribing from events or deallocating resources, to prevent memory leaks and other issues.
+
+#### Defining a cleanUp Function
+
+In your component's controller, define a `cleanUp` method. This method can optionally receive information about the trigger (similar to the `render` method) if the cleanup operations depend on how the component is being updated.
+
+```javascript
+export const myComponent = {
+  // ... other properties ...
+
+  // Define a cleanUp function
+  cleanUp(state, el, trigger) {
+    // Perform cleanup tasks here
+    // For example, remove event listeners, cancel timers, etc.
+    if (trigger && trigger.name === "someName") {
+      // Specific cleanup based on the trigger
+    }
+    console.log("Cleaning up before re-rendering or updating DOM")
+  },
+
+  render(state, el, trigger) {
+    // Rendering logic here
+    // ...
+  },
+}
+```
+
+In the above example, the cleanUp function is defined to perform tasks before the component is updated. It's particularly useful for removing event listeners, canceling timeouts/intervals, or handling any other teardown logic necessary to clean up the previous state of the component.
+
+How cleanUp is Executed
+The KLL framework will automatically call the cleanUp function in the following scenarios:
+
+Before Re-rendering: If the component needs to be re-rendered due to state changes or other updates, cleanUp is called before the new render to ensure a clean slate.
+Before DOM Updates: If the DOM is about to be updated and the component is involved, cleanUp provides an opportunity to perform any necessary teardown operations.
+This lifecycle hook ensures that components can manage their resources efficiently, avoiding common pitfalls like memory leaks and zombie event listeners.
+
+Use Cases for cleanUp
+Event Listeners: Remove event listeners attached to global objects or DOM elements.
+Timers: Clear any timeouts or intervals that shouldn't persist beyond the life of the component.
+Subscriptions: Unsubscribe from shared state, observables, or other forms of communication.
+DOM Manipulations: Revert any direct DOM manipulations performed by the component.
+
 ## Plugins
 
 KLL's power comes from its extensibility through plugins. Here's how you can create a basic plugin:
