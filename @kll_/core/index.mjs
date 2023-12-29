@@ -55,7 +55,6 @@ export class KLL {
    * @param {KLLPlugin[]} [plugins=[]] - Plugins to be applied to the instance.
    */
   constructor(config) {
-    this.routePrefix = config.routePrefix || ""
     this.id = config.id
     this.routes = config.routes
     this.ctrlPath = config.ctrlPath || "./ctrl/"
@@ -89,16 +88,13 @@ export class KLL {
   }
 
   parseRoute(href) {
-    const route =
-      href || window.location.hash.replace(this.routePrefix, "") || window.location.pathname
-    const routeParts = route.split("/").splice(1)
-    const routeKeys = Object.keys(pages)
+    const route = href || window.location.pathname
+    const routeParts = route.split("/")
+    const routeKeys = Object.keys(this.routes)
     const params = {}
 
     const template = routeKeys.reduce((acc, route) => {
       const parts = route.split("/")
-
-      if (parts.length !== routeParts.length) return acc
 
       parts.forEach((part, i) => {
         if (part.startsWith(":")) {
@@ -122,7 +118,7 @@ export class KLL {
     const page = this.routes[template]
 
     if (page) {
-      const appElement = document.querySelector(this.id)
+      const appElement = document.querySelector(`#${this.id}`)
       appElement.innerHTML = page
       await this.kllT()
     }
