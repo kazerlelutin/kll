@@ -64,15 +64,12 @@ export class KLL {
     const plugins = config.plugins || []
 
     plugins.forEach((PluginClass) => {
-      if (PluginClass.prototype instanceof KLLPlugin) {
-        const plugin = new PluginClass(this)
-        if (plugin.name) {
-          this.plugins[plugin.name] = (...args) => plugin.action(...args)
-        } else {
-          console.warn(`Plugin ${PluginClass.name} as no name.`)
-        }
+      const plugin =
+        PluginClass.prototype instanceof KLLPlugin ? new PluginClass(this) : PluginClass()
+      if (plugin.name) {
+        this.plugins[plugin.name] = (...args) => plugin.action(...args)
       } else {
-        console.warn(`the plugin ${PluginClass.name} is not a KLLPlugin.`)
+        console.warn(`Plugin ${PluginClass.name} as no name.`)
       }
     })
 
