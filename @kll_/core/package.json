@@ -1,6 +1,6 @@
 {
   "name": "@kll_/core",
-  "version": "0.1.26",
+  "version": "0.1.32",
   "description": "Core library for KLL",
   "scope": "@kll_",
   "main": "index.mjs",
@@ -10,9 +10,6 @@
     "name": "Kazerlelutin"
   },
   "directories": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kazerlelutin/kll.git"

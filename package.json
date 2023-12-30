@@ -2,12 +2,21 @@
   "name": "kll",
   "version": "0.1.14",
   "description": "monorepo for kll's projects",
+  "type": "module",
+  "esnext": "true",
   "author": {
     "email": "b@bouteiller.contact",
     "url": "https://ko-fi.com/kazerlelutin",
     "name": "Kazerlelutin"
   },
+  "scripts": {
+    "test": "node --test",
+    "test:watch": "node --test --watch"
+  },
   "dependencies": {
     "lerna": "^8.0.1"
+  },
+  "devDependencies": {
+    "jsdom": "^23.0.1"
   }
 }

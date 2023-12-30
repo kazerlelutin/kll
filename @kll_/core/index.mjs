@@ -62,6 +62,7 @@ export class KLL {
     this.cleanupCollection = []
     this.plugins = {}
     const plugins = config.plugins || []
+    this.initialize = false
 
     plugins.forEach((PluginClass) => {
       const plugin =
@@ -76,7 +77,7 @@ export class KLL {
     this._init()
   }
 
-  _init() {
+  async _init() {
     const appElement = document.getElementById(this.id)
     if (!appElement) {
       console.warn(`No element found with id ${this.id}`)
@@ -84,7 +85,8 @@ export class KLL {
     }
     appElement.routes = this.routes
 
-    this.injectPage()
+    await this.injectPage()
+    this.initialize = true
   }
 
   parseRoute(href) {
@@ -105,7 +107,7 @@ export class KLL {
         }
       })
       return acc
-    }, "index")
+    }, "/")
 
     return { params, template, route }
   }
@@ -118,6 +120,7 @@ export class KLL {
     const { template } = this.parseRoute(path)
     const page = this.routes[template]
     const appElement = document.querySelector(`#${this.id}`)
+
     this.cleanUp()
     if (page) {
       appElement.innerHTML = page
@@ -145,12 +148,15 @@ export class KLL {
   async hydrate(tElement) {
     this.cleanUpElement(tElement)
     const attrs = await this.processAttributes(tElement)
+
     const containerParent = document.createElement("div")
-    containerParent.appendChild(attrs.template)
-    const container = containerParent.firstElementChild
+
+    if (attrs?.template) containerParent.appendChild(attrs.template)
+    const container = attrs.template ? containerParent.firstElementChild : tElement
 
     container._listeners = {}
 
+    // Initialise l'état et attache les méthodes du contrôleur.
     container.state = this.handleInitState(attrs.state, container, attrs.ctrl?.render)
 
     for (const attr in attrs.attrs) {
@@ -162,18 +168,34 @@ export class KLL {
 
     container.getState = (id) => KLL.getState(id)
 
-    const slot = container.querySelector("slot")
-    if (slot) {
-      const children = tElement.firstElementChild || tElement.firstChild
-      slot.replaceWith(children)
+    // Gère les éléments enfants si un slot est défini.
+    if (container.querySelector("slot")) {
+      const children = tElement.childNodes
+      container.innerHTML = "" // Vide le conteneur si c'est le tElement lui-même.
+      children.forEach((child) => container.appendChild(child))
     }
 
-    tElement.replaceWith(container)
+    // Remplace l'élément original si un template est utilisé.
+    if (attrs.template) {
+      tElement.replaceWith(container)
+    }
+
+    // Appelle la méthode onInit si elle est définie.
     container?.onInit?.()
   }
 
   /**
-   * Cleans up all event listeners from the given element.
+   * Initializes and attaches the KLL framework to specified elements.
+   */
+  async kllT() {
+    const tEl = document.querySelectorAll("[kll-t], [kll-ctrl]")
+    for (const tElement of tEl) {
+      await this.hydrate(tElement)
+    }
+  }
+
+  /**
+   * Remove all event listeners from the given element.
    * @param {HTMLElement} element - The element from which to remove listeners.
    */
   cleanUpElement(element) {
@@ -190,40 +212,6 @@ export class KLL {
       el?.()
     })
     this.cleanupCollection = []
-  }
-
-  /**
-   * Initializes and attaches the KLL framework to specified elements.
-   */
-  async kllT() {
-    const tEl = document.querySelectorAll("[kll-t]")
-    for (const tElement of tEl) {
-      await this.hydrate(tElement)
-    }
-  }
-
-  /**
-   * Remove all event listeners from the given element.
-   * @param {HTMLElement} element - The element from which to remove listeners.
-   */
-  cleanUpElement(element) {
-    if (!element?._listeners) return
-    Object.keys(element._listeners).forEach((k) => {
-      element.removeEventListener(k, element._listeners[k])
-    })
-    this.element?.cleanUp?.()
-    element._listeners = {}
-  }
-
-  /**
-   * Hydrate all elements with the kll-t attribute.
-   */
-  async kllT() {
-    const tEl = document.querySelectorAll("[kll-t]")
-
-    for (const tElement of tEl) {
-      await this.hydrate(tElement)
-    }
   }
 
   /**
@@ -285,7 +273,7 @@ export class KLL {
     const attrs = {
       state: [],
       ctrl: {},
-      template: {},
+      template: undefined,
       attrs: {},
       kllId: null,
     }
@@ -334,7 +322,10 @@ export class KLL {
     try {
       const nameAndfolder = templateName.replace(".", "/")
       const path = nameAndfolder.startsWith("/") ? nameAndfolder.slice(1) : nameAndfolder
-      const completePath = `${this.templatePath}${path}.html?raw`
+      const completePath = `${
+        this.templatePath.endsWith("/") ? this.templatePath : `${this.templatePath}/`
+      }${path}.html?raw`
+
       raw = await import(/* @vite-ignore */ completePath)
     } catch (e) {
       throw new Error(`Template ${templateName} not found`)
@@ -366,7 +357,9 @@ export class KLL {
       const nameAndfolder = attrValue.replace(".", "/")
       const path = nameAndfolder.startsWith("/") ? nameAndfolder.slice(1) : nameAndfolder
 
-      const completePath = `${this.ctrlPath}${path}.js`
+      const completePath = `${
+        this.ctrlPath.endsWith("/") ? this.ctrlPath : `${this.ctrlPath}/`
+      }${path}.js`
 
       ctrlImp = await import(/* @vite-ignore */ completePath)
     } catch (e) {
