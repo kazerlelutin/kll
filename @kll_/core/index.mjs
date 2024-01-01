@@ -87,6 +87,10 @@ export class KLL {
 
     await this.injectPage()
     this.initialize = true
+
+    window.addEventListener("popstate", () => {
+      this.injectPage()
+    })
   }
 
   parseRoute(href) {

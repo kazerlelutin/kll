@@ -12,6 +12,8 @@ const baseConfig = {
   },
 }
 
+const timer = (ms) => new Promise((res) => setTimeout(res, ms))
+
 describe("========== KLL CORE ==========", () => {
   beforeEach(async () => {
     const dom = new JSDOM(`<div id="app">__</div>`, { url: "http://localhost/" })
@@ -67,4 +69,31 @@ describe("========== KLL CORE ==========", () => {
       '<div kll-ctrl="foo" id="home"><h1>Foo</h1></div>'
     )
   })
+
+  it("change page", async () => {
+    const config = {
+      ...baseConfig,
+      routes: {
+        "/": "<div kll-ctrl='foo' id='home'>Home</div>",
+        "/bar": "<div id='bar'>Bar</div>",
+      },
+    }
+
+    const kll = new KLL(config)
+
+    await kll._init()
+
+    assert.strictEqual(
+      document.querySelector("#home").outerHTML,
+      '<div kll-ctrl="foo" id="home"><h1>Foo</h1></div>'
+    )
+
+    window.history.pushState({}, "", "/bar")
+    await kll._init()
+
+    assert.strictEqual(document.querySelector("#bar").outerHTML, '<div id="bar">Bar</div>')
+  })
+
+  //TODO test state
+  //TODO test rerender.
 })
