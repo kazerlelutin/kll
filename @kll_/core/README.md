@@ -44,7 +44,9 @@ git clone https://github.com/your-username/kll-framework.git
 Here's how you can set up a simple KLL application:
 
 ```javascript
-import { KLL } from "path-to-kll/KLL"
+import { KLL } from "@kll_/core"
+import * as ctrl from "./ctrl"
+import * as templates from "./templates"
 
 // Define your routes and templates
 const config = {
@@ -52,8 +54,8 @@ const config = {
   routes: {
     /* ...your routes... */
   },
-  ctrlPath: "./ctrl/",
-  templatePath: "./templates/",
+  ctrl,
+  template,
   plugins: [
     /* ...your plugins... */
   ],
@@ -153,13 +155,13 @@ Create an HTML file and include the necessary KLL framework and your component s
         kll-id="my_button"
       ></div>
 
-      <div kll-t="text-to-render" kll-b="truc.rien,my_button.count" kll-ctrl="textToRender"></div>
+      <div kll-t="textToRender" kll-b="truc.rien,my_button.count" kll-ctrl="textToRender"></div>
 
-      <div kll-t="with-children">
+      <div kll-t="withChildren">
         <div>hello, children</div>
       </div>
       <div kll-t="inception" kll-ctrl="inception" kll-b="inception_button.count"></div>
-      <div kll-t="ui.button" kll-ctrl="ui.button">Button in folder "ui"</div>
+      <div kll-t="button" kll-ctrl="button">Button in folder "ui"</div>
     </div>
 
     <!-- Include KLL and components scripts here -->
@@ -171,7 +173,7 @@ Create an HTML file and include the necessary KLL framework and your component s
    Create a template file for your components. For example, here's how you might define the button-count template:
 
 ```html
-<template id="button-count">
+<template id="buttonCount">
   <button class="border border-white m-2" type="button"></button>
 </template>
 ```
@@ -202,7 +204,7 @@ export const buttonCount = {
    This component render the previous button count.
 
 ```html
-<template id="text-to-render">
+<template id="textToRender">
   <div>
     <h2>Render</h2>
     <p>the count of button: <span data-count>0</span></p>
@@ -228,7 +230,7 @@ In Your Page
 
 ```HTML
 <!--Kll-b listen key "bar" on element "foo" and "count" on element "my_button" -->
-  <div kll-t="text-to-render" kll-b="foo.bar,my_button.count" kll-ctrl="textToRender"></div>
+  <div kll-t="textToRender" kll-b="foo.bar,my_button.count" kll-ctrl="textToRender"></div>
 ```
 
 ## Plugin
@@ -253,11 +255,8 @@ import { CreateComponentPlugin } from "@kll_/basic"
 // Define your routes and templates
 const config = {
   id: "app",
-  routes: {
-    /* ...your routes... */
-  },
-  ctrlPath: "./ctrl/",
-  templatePath: "./templates/",
+
+  // ....
   plugins: [CreateComponentPlugin],
 }
 

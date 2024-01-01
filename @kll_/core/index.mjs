@@ -48,17 +48,17 @@ export class KLL {
   /**
    * Constructs an instance of KLL.
    * @param {Object} config - The configuration for the KLL instance.
-   * @param {string} config.id - The ID of the root element.
-   * @param {Object} config.routes - The routes for the application.
-   * @param {string} [config.ctrlPath='./ctrl/'] - Path to the controllers.
-   * @param {string} [config.templatePath='./templates/'] - Path to the templates.
-   * @param {KLLPlugin[]} [plugins=[]] - Plugins to be applied to the instance.
+   * @param {string} config.id - The ID of the root element where the KLL app will be mounted.
+   * @param {Object} config.routes - An object defining the routes for the application. Keys are paths, values are the content or components to render.
+   * @param {Object} config.ctrl - An object containing all controllers available for the application. Each key should be the controller name, and the value should be the controller itself.
+   * @param {Object} config.templates - An object containing all templates available for the application. Each key should be the template name, and the value should be the template content or reference.
+   * @param {KLLPlugin[]} [config.plugins=[]] - An array of plugins to be applied to the instance. Each plugin should extend from KLLPlugin and can modify or extend the functionality of the KLL instance.
    */
   constructor(config) {
     this.id = config.id
     this.routes = config.routes
-    this.ctrlPath = config.ctrlPath || "./ctrl/"
-    this.templatePath = config.templatePath || "./templates/"
+    this.ctrl = config.ctrl || {}
+    this.templates = config.templates || {}
     this.cleanupCollection = []
     this.plugins = {}
     const plugins = config.plugins || []
@@ -154,7 +154,6 @@ export class KLL {
     const attrs = await this.processAttributes(tElement)
 
     const containerParent = document.createElement("div")
-
     if (attrs?.template) containerParent.appendChild(attrs.template)
     const container = attrs.template ? containerParent.firstElementChild : tElement
 
@@ -273,7 +272,7 @@ export class KLL {
    * @param {HTMLElement} tElement - The element from which to extract attributes.
    * @returns {Object} An object containing processed attributes.
    */
-  async processAttributes(tElement) {
+  processAttributes(tElement) {
     const attrs = {
       state: [],
       ctrl: {},
@@ -289,9 +288,22 @@ export class KLL {
         attrs.state.push({ [attr.slice(6)]: attrValue })
       }
       if (attr === "kll-ctrl") {
-        attrs.ctrl = await this.handleControllerAttribute(attrValue)
+        attrs.ctrl = this.ctrl?.[attrValue] ? this.ctrl[attrValue] : undefined
       } else if (attr === "kll-t") {
-        attrs.template = await this.handleTemplate(attrValue)
+        const raw = this.templates?.[attrValue] ? this.templates[attrValue] : undefined
+
+        if (raw) {
+          const el = document.createElement("div")
+          el.innerHTML = raw.default
+          const template = el.querySelector(`#${attrValue}`).content
+          const componentInstance = document.importNode(template, true)
+          const container = document.createElement("div")
+          container.appendChild(componentInstance)
+
+          attrs.template = container.firstElementChild
+        } else {
+          attrs.template = undefined
+        }
       } else if (attr === "kll-id") {
         attrs.kllId = attrValue
         attrs.attrs["kll-id"] = attrValue
@@ -314,67 +326,6 @@ export class KLL {
       return { ...acc, ...curr }
     }, {})
     return attrs
-  }
-
-  /**
-   * Handles importing and processing of the specified template.
-   * @param {string} templateName - The name of the template to import and process.
-   * @returns {HTMLElement} The first child of the container with the processed template.
-   */
-  async handleTemplate(templateName) {
-    let raw = null
-    try {
-      const nameAndfolder = templateName.replace(".", "/")
-      const path = nameAndfolder.startsWith("/") ? nameAndfolder.slice(1) : nameAndfolder
-      const completePath = `${
-        this.templatePath.endsWith("/") ? this.templatePath : `${this.templatePath}/`
-      }${path}.html?raw`
-
-      raw = await import(/* @vite-ignore */ completePath)
-    } catch (e) {
-      throw new Error(`Template ${templateName} not found`)
-    }
-    const el = document.createElement("div")
-    el.innerHTML = raw.default
-
-    const name = templateName.split(".").pop()
-
-    const template = el.querySelector(`#${name}`).content
-    const componentInstance = document.importNode(template, true)
-    const container = document.createElement("div")
-    container.appendChild(componentInstance)
-
-    return container.firstElementChild
-  }
-
-  /**
-   * Handles importing and processing of the specified controller.
-   * @param {string} attrValue - The value of the controller attribute to import and process.
-   * @returns {Object} The imported controller module.
-   */
-  async handleControllerAttribute(attrValue) {
-    let ctrlImp = null
-
-    const name = attrValue.split(".").pop()
-
-    try {
-      const nameAndfolder = attrValue.replace(".", "/")
-      const path = nameAndfolder.startsWith("/") ? nameAndfolder.slice(1) : nameAndfolder
-
-      const completePath = `${
-        this.ctrlPath.endsWith("/") ? this.ctrlPath : `${this.ctrlPath}/`
-      }${path}.js`
-
-      ctrlImp = await import(/* @vite-ignore */ completePath)
-    } catch (e) {
-      throw new Error(`Controller ${attrValue} not found`)
-    }
-
-    if (!ctrlImp.default && !ctrlImp[name]) {
-      throw new Error(`Controller ${attrValue} not found`)
-    }
-
-    return ctrlImp.default || ctrlImp[name]
   }
 
   /**
