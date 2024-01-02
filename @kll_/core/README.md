@@ -1,3 +1,7 @@
+# ALPHA !!!
+
+Warning: there is possible lot of bug and breaking changes. you can open a issue for help.
+
 # KLL
 
 KLL is a lightweight, extensible JavaScript framework for building dynamic web applications. It offers a simple plugin system, easy state management, and an intuitive templating system.

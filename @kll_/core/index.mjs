@@ -48,21 +48,19 @@ export class KLL {
   /**
    * Constructs an instance of KLL.
    * @param {Object} config - The configuration for the KLL instance.
-   * @param {string} config.id - The ID of the root element where the KLL app will be mounted.
-   * @param {Object} config.routes - An object defining the routes for the application. Keys are paths, values are the content or components to render.
-   * @param {Object} config.ctrl - An object containing all controllers available for the application. Each key should be the controller name, and the value should be the controller itself.
-   * @param {Object} config.templates - An object containing all templates available for the application. Each key should be the template name, and the value should be the template content or reference.
-   * @param {KLLPlugin[]} [config.plugins=[]] - An array of plugins to be applied to the instance. Each plugin should extend from KLLPlugin and can modify or extend the functionality of the KLL instance.
+   * @param {string} config.id - The ID of the root element.
+   * @param {Object} config.routes - The routes for the application.
+   * @param {KLLPlugin[]} [plugins=[]] - Plugins to be applied to the instance.
    */
   constructor(config) {
     this.id = config.id
     this.routes = config.routes
-    this.ctrl = config.ctrl || {}
-    this.templates = config.templates || {}
     this.cleanupCollection = []
     this.plugins = {}
     const plugins = config.plugins || []
     this.initialize = false
+    this.ctrlPath = config.ctrlPath || undefined
+    this.templatePath = config.templatePath || undefined
 
     plugins.forEach((PluginClass) => {
       const plugin =
@@ -73,7 +71,6 @@ export class KLL {
         console.warn(`Plugin ${PluginClass.name} as no name.`)
       }
     })
-
     this._init()
   }
 
@@ -225,14 +222,10 @@ export class KLL {
    * @returns {Proxy} A proxy object representing the component's state.
    */
   handleInitState(state, container, render) {
-    const dependencies = render ? this.getDependencies(render) : null
-
     return new Proxy(state, {
       set: (target, key, value) => {
         const result = Reflect.set(target, key, value)
-        if (dependencies && dependencies.has(key)) {
-          container.render(key, value)
-        }
+        render(container.state, container, { name: container.kllId, key, value })
         this.handleTriggerState(key, value, container.kllId)
         return result
       },
@@ -254,25 +247,12 @@ export class KLL {
     }
   }
 
-  getDependencies(renderFunc) {
-    const strRender = renderFunc.toString()
-    const regex = /\bstate\.(\w+)|\${state\.(\w+)}|\{(\w+)[^}]*\}\s*=\s*state/g
-    let match
-    const dependencies = new Set()
-
-    while ((match = regex.exec(strRender)) !== null) {
-      dependencies.add(match[1] || match[2] || match[3])
-    }
-
-    return dependencies
-  }
-
   /**
    * Extracts and processes attributes from a given element.
    * @param {HTMLElement} tElement - The element from which to extract attributes.
    * @returns {Object} An object containing processed attributes.
    */
-  processAttributes(tElement) {
+  async processAttributes(tElement) {
     const attrs = {
       state: [],
       ctrl: {},
@@ -288,22 +268,9 @@ export class KLL {
         attrs.state.push({ [attr.slice(6)]: attrValue })
       }
       if (attr === "kll-ctrl") {
-        attrs.ctrl = this.ctrl?.[attrValue] ? this.ctrl[attrValue] : undefined
+        attrs.ctrl = await this.processCtrl(attrValue)
       } else if (attr === "kll-t") {
-        const raw = this.templates?.[attrValue] ? this.templates[attrValue] : undefined
-
-        if (raw) {
-          const el = document.createElement("div")
-          el.innerHTML = raw.default
-          const template = el.querySelector(`#${attrValue}`).content
-          const componentInstance = document.importNode(template, true)
-          const container = document.createElement("div")
-          container.appendChild(componentInstance)
-
-          attrs.template = container.firstElementChild
-        } else {
-          attrs.template = undefined
-        }
+        attrs.template = await this.processTemplate(attrValue)
       } else if (attr === "kll-id") {
         attrs.kllId = attrValue
         attrs.attrs["kll-id"] = attrValue
@@ -326,6 +293,26 @@ export class KLL {
       return { ...acc, ...curr }
     }, {})
     return attrs
+  }
+
+  async processTemplate(name) {
+    const templates = await this.templatePath
+    const template = templates[name]
+
+    if (!template) return console.warn(`No template found with name ${name}`)
+    const el = document.createElement("div")
+
+    el.innerHTML = template.default
+    const container = el.querySelector(`#${name}`).content
+    const componentInstance = document.importNode(container, true)
+    const containerParent = document.createElement("div")
+    containerParent.appendChild(componentInstance)
+    return containerParent.firstElementChild
+  }
+
+  async processCtrl(name) {
+    const ctrls = await this.ctrlPath
+    return ctrls[name]
   }
 
   /**
