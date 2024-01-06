@@ -173,6 +173,24 @@ Create an HTML file and include the necessary KLL framework and your component s
 </html>
 ```
 
+**KLL-TC**:
+Simple syntax (if template and controller have same name)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>KLL Example</title>
+    <!-- Include your CSS here -->
+  </head>
+  <body>
+    <div kll-tc="buttonCount"></div>
+    <!-- Include KLL and components scripts here -->
+  </body>
+</html>
+```
+
 2. Creating Templates
    Create a template file for your components. For example, here's how you might define the button-count template:
 

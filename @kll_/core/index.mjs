@@ -167,23 +167,56 @@ export class KLL {
    */
   async hydrate(tElement) {
     this.cleanUpElement(tElement)
+    let kllId = tElement.getAttribute("kll-id")
+
+    if (!kllId) {
+      const t = tElement.getAttribute("kll-t")
+      const c = tElement.getAttribute("kll-c")
+      const tc = tElement.getAttribute("kll-tc")
+      const ctrl = tElement.getAttribute("kll-ctrl")
+
+      if (t && ctrl) {
+        kllId = `${t}_${ctrl}`
+      } else if (c) {
+        kllId = c
+      } else if (tc) {
+        kllId = tc
+      } else if (t) {
+        kllId = t
+      } else if (ctrl) {
+        kllId = ctrl
+      }
+    }
+    // Protection contre les multiples initialisations (nested components)
+    if (this.initsIds.includes(kllId)) return
+
+    // Raccourci pour la création de composants avec un contrôleur et un template au nom identique.
+    if (tElement.getAttribute("kll-tc")) {
+      const value = tElement.getAttribute("kll-tc")
+      tElement.setAttribute("kll-t", value)
+      tElement.setAttribute("kll-ctrl", value)
+      tElement.removeAttribute("kll-tc")
+    }
+
     const attrs = await this.processAttributes(tElement)
 
     const containerParent = document.createElement("div")
     if (attrs?.template) containerParent.appendChild(attrs.template)
     const container = attrs.template ? containerParent.firstElementChild : tElement
 
-    container._listeners = {}
-
-    // Initialise l'état et attache les méthodes du contrôleur.
-    container.state = this.handleInitState(attrs.state, container, attrs.ctrl?.render)
-
     for (const attr in attrs.attrs) {
       container.setAttribute(attr, attrs.attrs[attr])
     }
 
-    container.kllId =
-      attrs.kllId || `${tElement.getAttribute("kll-t")}_${tElement.getAttribute("kll-ctrl")}`
+    if (this.initsIds.includes(container.kllId)) return
+
+    container._listeners = {}
+    // Initialise l'état et attache les méthodes du contrôleur.
+    container.state = this.handleInitState(attrs.state, container, attrs.ctrl?.render)
+
+    // Initialise l'ID du composant et l'attache à l'élément.
+    container.kllId = kllId
+    container.setAttribute("kll-id", kllId)
 
     this.handleAttachMethods(container, attrs.ctrl, container.state)
 
@@ -205,12 +238,12 @@ export class KLL {
     }
 
     // Appelle la méthode onInit si elle est définie. Previent les appels multiples.
-    if (!this.initsIds.includes(container.kllId)) container?.onInit?.()
+    container?.onInit?.()
     this.initsIds.push(container.kllId)
   }
 
   async hydrateNestedComponents(element) {
-    const nestedComponents = element.querySelectorAll("[kll-t], [kll-ctrl]")
+    const nestedComponents = element.querySelectorAll("[kll-t], [kll-ctrl], [kll-tc]")
     for (const nested of nestedComponents) {
       await this.hydrate(nested)
     }
@@ -294,9 +327,6 @@ export class KLL {
         attrs.ctrl = await this.processCtrl(attrValue)
       } else if (attr === "kll-t") {
         attrs.template = await this.processTemplate(attrValue)
-      } else if (attr === "kll-id") {
-        attrs.kllId = attrValue
-        attrs.attrs["kll-id"] = attrValue
       }
 
       if (!attr.startsWith("kll-") || attr === "kll-b") {
