@@ -54,7 +54,8 @@ export class KLL {
    */
   constructor(config) {
     this.id = config.id
-    this.routes = config.routes
+    this.routes = {}
+    this.routesAsync = config.routes
     this.cleanupCollection = []
     this.plugins = {}
     const plugins = config.plugins || []
@@ -71,6 +72,7 @@ export class KLL {
         console.warn(`Plugin ${PluginClass.name} as no name.`)
       }
     })
+
     this._init()
   }
 
@@ -83,7 +85,6 @@ export class KLL {
     appElement.routes = this.routes
 
     await this.injectPage()
-    this.initialize = true
 
     window.addEventListener("popstate", () => {
       this.injectPage()
@@ -92,8 +93,9 @@ export class KLL {
 
   parseRoute(href) {
     const route = href || window.location.pathname
+
     const routeParts = route.split("/").splice(1)
-    const routeKeys = Object.keys(this.routes)
+    const routeKeys = Object.keys(this.routesAsync)
     const params = {}
 
     const template = routeKeys.reduce((acc, route) => {
@@ -118,14 +120,29 @@ export class KLL {
    * @param {string} path - The path to identify which page to inject.
    */
   async injectPage(path) {
+    if (!this.initialize) {
+      //Cache the entryPoint
+      if (this.routesAsync["/"]) {
+        this.routes["/"] = await this.routesAsync["/"]
+      }
+    }
+
+    this.initialize = true
     const { template } = this.parseRoute(path)
-    const page = this.routes[template]
+
+    let page = this.routes[template]
+
+    if (!page) {
+      page = await this.routesAsync[template]
+      this.routes[template] = page
+    }
+
     const appElement = document.querySelector(`#${this.id}`)
 
     this.cleanUp()
     if (page) {
       appElement.innerHTML = page
-      await this.kllT()
+      await this.hydrateNestedComponents(appElement)
     } else {
       const keys = Object.keys(this.routes)
       appElement.innerHTML = this.routes[keys[0]]
@@ -170,27 +187,27 @@ export class KLL {
 
     // Gère les éléments enfants si un slot est défini.
     if (container.querySelector("slot")) {
-      const children = tElement.childNodes
-      container.innerHTML = "" // Vide le conteneur si c'est le tElement lui-même.
-      children.forEach((child) => container.appendChild(child))
+      const slot = container.querySelector("slot")
+      const el = document.createElement("div")
+      el.innerHTML = tElement.innerHTML
+      slot.innerHTML = ""
+      slot.replaceWith(el.firstElementChild ? el.firstElementChild : el.innerHTML)
     }
 
     // Remplace l'élément original si un template est utilisé.
     if (attrs.template) {
       tElement.replaceWith(container)
+      await this.hydrateNestedComponents(container) // Hydrater les composants imbriqués
     }
 
     // Appelle la méthode onInit si elle est définie.
     container?.onInit?.()
   }
 
-  /**
-   * Initializes and attaches the KLL framework to specified elements.
-   */
-  async kllT() {
-    const tEl = document.querySelectorAll("[kll-t], [kll-ctrl]")
-    for (const tElement of tEl) {
-      await this.hydrate(tElement)
+  async hydrateNestedComponents(element) {
+    const nestedComponents = element.querySelectorAll("[kll-t], [kll-ctrl]")
+    for (const nested of nestedComponents) {
+      await this.hydrate(nested)
     }
   }
 
