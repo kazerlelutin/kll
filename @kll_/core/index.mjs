@@ -182,7 +182,11 @@ export class KLL {
       container.setAttribute(attr, attrs.attrs[attr])
     }
 
-    container.kllId = attrs.kllId || `${tElement.getAttribute("kll-t")}_${new Date().getTime()}`
+    container.kllId = attrs.kllId
+      ? attrs.kllId
+      : `${
+          tElement.getAttribute("kll-t") || tElement.getAttribute("kll-ctrl")
+        }_${new Date().getTime()}`
 
     this.handleAttachMethods(container, attrs.ctrl, container.state)
 
