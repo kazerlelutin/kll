@@ -62,6 +62,7 @@ export class KLL {
     this.initialize = false
     this.ctrlPath = config.ctrlPath || undefined
     this.templatePath = config.templatePath || undefined
+    this.initsIds = []
 
     plugins.forEach((PluginClass) => {
       const plugin =
@@ -120,6 +121,7 @@ export class KLL {
    * @param {string} path - The path to identify which page to inject.
    */
   async injectPage(path) {
+    this.initsIds = []
     if (!this.initialize) {
       //Cache the entryPoint
       if (this.routesAsync["/"]) {
@@ -181,6 +183,7 @@ export class KLL {
     }
 
     container.kllId = attrs.kllId || `${tElement.getAttribute("kll-t")}_${new Date().getTime()}`
+
     this.handleAttachMethods(container, attrs.ctrl, container.state)
 
     container.getState = (id) => KLL.getState(id)
@@ -200,8 +203,9 @@ export class KLL {
       await this.hydrateNestedComponents(container) // Hydrater les composants imbriqués
     }
 
-    // Appelle la méthode onInit si elle est définie.
-    container?.onInit?.()
+    // Appelle la méthode onInit si elle est définie. Previent les appels multiples.
+    if (!this.initsIds.includes(container.kllId)) container?.onInit?.()
+    this.initsIds.push(container.kllId)
   }
 
   async hydrateNestedComponents(element) {
@@ -225,6 +229,7 @@ export class KLL {
   }
 
   cleanUp() {
+    this.initsIds = []
     this.cleanupCollection.forEach((el) => {
       el?.()
     })
