@@ -144,7 +144,7 @@ export class KLL {
     this.cleanUp()
     if (page) {
       appElement.innerHTML = page
-      await this.hydrateNestedComponents(appElement)
+      await this.hydrateNestedComponents(this.sanitizeElement(appElement))
     } else {
       const keys = Object.keys(this.routes)
       appElement.innerHTML = this.routes[keys[0]]
@@ -166,6 +166,7 @@ export class KLL {
    * @param {HTMLElement} tElement - The element to hydrate.
    */
   async hydrate(tElement) {
+    this.sanitizeElement(tElement)
     this.cleanUpElement(tElement)
     let kllId = tElement.getAttribute("kll-id")
 
@@ -234,7 +235,7 @@ export class KLL {
     // Remplace l'élément original si un template est utilisé.
     if (attrs.template) {
       tElement.replaceWith(container)
-      await this.hydrateNestedComponents(container) // Hydrater les composants imbriqués
+      await this.hydrateNestedComponents(this.sanitizeElement(container)) // Hydrater les composants imbriqués
     }
 
     // Appelle la méthode onInit si elle est définie. Previent les appels multiples.
@@ -356,11 +357,12 @@ export class KLL {
     const el = document.createElement("div")
 
     el.innerHTML = template.default
+
     const container = el.querySelector(`#${name}`).content
     const componentInstance = document.importNode(container, true)
     const containerParent = document.createElement("div")
     containerParent.appendChild(componentInstance)
-    return containerParent.firstElementChild
+    return this.sanitizeElement(containerParent.firstElementChild)
   }
 
   async processCtrl(name) {
@@ -414,5 +416,22 @@ export class KLL {
    */
   registerPlugin(pluginName, plugin) {
     this.plugins[pluginName] = plugin
+  }
+
+  sanitizeElement(element) {
+    // Supprimer tous les éléments script
+    const scripts = element.querySelectorAll("script")
+    scripts.forEach((script) => script.remove())
+
+    // Supprimer tous les attributs commençant par 'on'
+    const allElements = element.querySelectorAll("*")
+    allElements.forEach((el) => {
+      ;[...el.attributes].forEach((attr) => {
+        if (attr.name.startsWith("on")) {
+          el.removeAttribute(attr.name)
+        }
+      })
+    })
+    return element
   }
 }
