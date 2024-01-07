@@ -427,7 +427,9 @@ export class KLL {
     const allElements = element.querySelectorAll("*")
     allElements.forEach((el) => {
       ;[...el.attributes].forEach((attr) => {
-        if (attr.name.startsWith("on")) {
+        const regex = /<script|<ifr|<em|<img|javascript:/i.test(attr.value)
+        if (attr.name.startsWith("on") || regex) {
+          console.warn(`Attribute ${attr.name} removed from element ${el.tagName}, possible XSS.`)
           el.removeAttribute(attr.name)
         }
       })
