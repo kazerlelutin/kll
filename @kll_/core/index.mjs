@@ -162,6 +162,17 @@ export class KLL {
   }
 
   /**
+   * @description reload a compenantn and hydrate it
+   * @param {HTMLElement} tElement
+   */
+  async reload(tElement) {
+    const idsEl = tElement.querySelectorAll("[kll-id]")
+    const ids = [...idsEl].map((el) => el.getAttribute("kll-id"))
+    this.initsIds = this.initsIds.filter((id) => !ids.includes(id))
+    this.hydrateNestedComponents(tElement)
+  }
+
+  /**
    * Hydrates a given element with the necessary attributes and state.
    * @param {HTMLElement} tElement - The element to hydrate.
    */

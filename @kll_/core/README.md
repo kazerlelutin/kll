@@ -318,3 +318,7 @@ export const inception = {
 ```
 
 In this example, the inception component uses the createComponent function to dynamically insert a new "button-count" component into the DOM after a 1-second delay. The new component is fully reactive and integrated with the KLL framework's state management system. This demonstrates the power and flexibility of the @kll\_/basic package when creating dynamic, interactive web applications.
+
+## kll.reload(element)
+
+if you change content of element, you can reload it for hydrate the new content and clean old elements

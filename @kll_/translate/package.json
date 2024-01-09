@@ -1,6 +1,6 @@
 {
   "name": "@kll_/translate",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Plugin de traduction pour le framework KLL",
   "main": "index.js",
   "dependencies": {

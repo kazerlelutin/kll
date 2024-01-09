@@ -50,7 +50,7 @@ export class TranslatePlugin extends KLLPlugin {
         const finalKey = count > 1 ? `${key}_multi` : key
         let trans = this.translation?.[finalKey]?.[this.lang] || key
         if (count) trans = trans.replace("{{count}}", count)
-        el.innerHTML = trans
+        el.innerText = trans
       }
     })
 
