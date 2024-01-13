@@ -186,9 +186,19 @@ export class KLL {
       const c = tElement.getAttribute("kll-c")
       const tc = tElement.getAttribute("kll-tc")
       const ctrl = tElement.getAttribute("kll-ctrl")
+      const m = tElement.getAttribute("kll-m")
+      const tm = tElement.getAttribute("kll-tm")
 
       if (t && ctrl) {
         kllId = `${t}_${ctrl}`
+      } else if (t && m && ctrl) {
+        kllId = `${t}_${m}_${ctrl}`
+      } else if (t && m && c) {
+        kllId = `${t}_${m}_${c}`
+      } else if (tm && ctrl) {
+        kllId = `${tm}_${ctrl}`
+      } else if (tm && c) {
+        kllId = `${tm}_${c}`
       } else if (c) {
         kllId = c
       } else if (tc) {
@@ -202,12 +212,25 @@ export class KLL {
     // Protection contre les multiples initialisations (nested components)
     if (this.initsIds.includes(kllId)) return
 
+    if (tElement.getAttribute("kll-c")) {
+      const value = tElement.getAttribute("kll-c")
+      tElement.setAttribute("kll-ctrl", value)
+      tElement.removeAttribute("kll-c")
+    }
     // Raccourci pour la création de composants avec un contrôleur et un template au nom identique.
     if (tElement.getAttribute("kll-tc")) {
       const value = tElement.getAttribute("kll-tc")
       tElement.setAttribute("kll-t", value)
       tElement.setAttribute("kll-ctrl", value)
       tElement.removeAttribute("kll-tc")
+    }
+
+    // Raccourci pour la création de composants avec un template et un middleware au nom identique.
+    if (tElement.getAttribute("kll-tm")) {
+      const value = tElement.getAttribute("kll-tm")
+      tElement.setAttribute("kll-t", value)
+      tElement.setAttribute("kll-m", value)
+      tElement.removeAttribute("kll-tm")
     }
 
     const attrs = await this.processAttributes(tElement)
@@ -230,7 +253,7 @@ export class KLL {
     container.kllId = kllId
     container.setAttribute("kll-id", kllId)
 
-    this.handleAttachMethods(container, attrs.ctrl, container.state)
+    this.handleAttachMethods(container, attrs.middlewares, attrs.ctrl, container.state)
 
     container.getState = (id) => KLL.getState(id)
 
@@ -255,7 +278,9 @@ export class KLL {
   }
 
   async hydrateNestedComponents(element) {
-    const nestedComponents = element.querySelectorAll("[kll-t], [kll-ctrl], [kll-tc]")
+    const nestedComponents = element.querySelectorAll(
+      "[kll-t], [kll-ctrl], [kll-tc], [kll-tm], [kll-m]"
+    )
     for (const nested of nestedComponents) {
       await this.hydrate(nested)
     }
@@ -325,6 +350,9 @@ export class KLL {
       state: [],
       ctrl: {},
       template: undefined,
+      middlewares: {
+        state: {},
+      },
       attrs: {},
       kllId: null,
     }
@@ -335,6 +363,12 @@ export class KLL {
       if (attr.startsWith("kll-s")) {
         attrs.state.push({ [attr.slice(6)]: attrValue })
       }
+
+      if (attr === "kll-m") {
+        console.log("kll-m", attrValue)
+        attrs.middlewares = await this.processCtrl(attrValue)
+      }
+
       if (attr === "kll-ctrl") {
         attrs.ctrl = await this.processCtrl(attrValue)
       } else if (attr === "kll-t") {
@@ -349,6 +383,7 @@ export class KLL {
     if (attrs.ctrl.state) {
       // ceux qui proviennent du ctrl ne sont pas  prioritaires, ils seront écrasés par ceux qui proviennent de l'attribut kll-s
       attrs.state = [
+        ...Object.keys(attrs.middlewares.state).map((k) => ({ [k]: attrs.ctrl.state[k] })),
         ...Object.keys(attrs.ctrl.state).map((k) => ({ [k]: attrs.ctrl.state[k] })),
         ...attrs.state,
       ]
@@ -387,37 +422,68 @@ export class KLL {
    * @param {Object} ctrl - The controller object containing methods to attach.
    * @param {Object} state - The state object of the component.
    */
-  handleAttachMethods(container, ctrl, state) {
-    const methods = Object.keys(ctrl)
+  handleAttachMethods(container, middlewares, ctrl, state) {
+    const middlewaresMethods = Object.keys(middlewares)
       .filter((k) => k.startsWith("on"))
-      .filter((k) => !k.match(/state|oninit/i))
+      .filter((k) => !k.match(/state|oninit|cleanup/i))
+    const ctrlMethods = Object.keys(ctrl)
+      .filter((k) => k.startsWith("on"))
+      .filter((k) => !k.match(/state|oninit|cleanup/i))
 
-    if (ctrl.render) {
-      container.render = (proxy) => ctrl.render(state, container, proxy)
-    }
-
-    if (ctrl.onInit) {
-      container.onInit = () => ctrl.onInit(state, container)
-    }
-
-    if (ctrl.cleanUp) {
-      container.cleanUp = this.cleanupCollection.push(() => ctrl.cleanUp(state, container))
-      container.cleanUp = (proxy) => ctrl.cleanUp(state, container, proxy)
-    }
-
-    for (const method of methods) {
-      const methodType = method.slice(2).toLocaleLowerCase()
-
-      const helper = (e) => {
-        if (typeof ctrl[method] === "function") {
-          ctrl[method](state, e.target, e)
-        } else {
-          console.warn(`Method ${methodType} is not defined on the controller.`)
+    // Traiter les méthodes de render séparément
+    if (middlewares.render || ctrl.render) {
+      container.render = async (proxy) => {
+        const middlewareResult = middlewares.render
+          ? await middlewares.render(state, container, proxy)
+          : undefined
+        if (ctrl.render) {
+          ctrl.render(state, container, proxy, middlewareResult)
         }
       }
+    }
+
+    // Gestion de onInit
+    if (middlewares.onInit || ctrl.onInit) {
+      container.onInit = async () => {
+        const middlewareResult = middlewares.onInit
+          ? await middlewares.onInit(state, container)
+          : undefined
+
+        if (ctrl.onInit) {
+          ctrl.onInit(state, container, middlewareResult)
+        }
+      }
+    }
+
+    // Gestion de cleanUp
+    if (middlewares.cleanUp || ctrl.cleanUp) {
+      container.cleanUp = () => {
+        const middlewareResult = middlewares.cleanUp
+          ? middlewares.cleanUp(state, container)
+          : undefined
+        if (ctrl.cleanUp) {
+          ctrl.cleanUp(state, container, middlewareResult)
+        }
+        this.cleanupCollection.push(container.cleanUp)
+      }
+    }
+
+    const mergedMethods = [...middlewaresMethods, ...ctrlMethods]
+    mergedMethods.forEach((method) => {
+      const methodType = method.slice(2).toLocaleLowerCase()
+
+      const helper = async (e) => {
+        const middlewareResult = middlewares[method]
+          ? await middlewares[method](state, e.target, e)
+          : undefined
+        if (ctrl[method]) {
+          ctrl[method](state, e.target, e, middlewareResult)
+        }
+      }
+
       container._listeners[methodType] = helper
       container.addEventListener(methodType, helper)
-    }
+    })
   }
 
   /**
