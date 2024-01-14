@@ -318,7 +318,7 @@ export class KLL {
     return new Proxy(state, {
       set: (target, key, value) => {
         const result = Reflect.set(target, key, value)
-        render(container.state, container, { name: container.kllId, key, value })
+        render?.(container.state, container, { name: container.kllId, key, value })
         this.handleTriggerState(key, value, container.kllId)
         return result
       },
@@ -365,7 +365,6 @@ export class KLL {
       }
 
       if (attr === "kll-m") {
-        console.log("kll-m", attrValue)
         attrs.middlewares = await this.processCtrl(attrValue)
       }
 
