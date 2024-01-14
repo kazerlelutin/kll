@@ -1,6 +1,6 @@
 {
   "name": "@kll_/core",
-  "version": "0.1.52",
+  "version": "0.1.53",
   "description": "Core library for KLL",
   "scope": "@kll_",
   "main": "index.mjs",
