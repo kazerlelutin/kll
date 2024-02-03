@@ -431,7 +431,8 @@ export class KLL {
 
     // Traiter les méthodes de render séparément
     if (middlewares.render || ctrl.render) {
-      container.render = async (proxy) => {
+      container.render = async (proxy_) => {
+        const proxy = proxy_ || { name: undefined, key: undefined, value: undefined }
         const middlewareResult = middlewares.render
           ? await middlewares.render(state, container, proxy)
           : undefined
@@ -448,9 +449,7 @@ export class KLL {
           ? await middlewares.onInit(state, container)
           : undefined
 
-        if (ctrl.onInit) {
-          ctrl.onInit(state, container, middlewareResult)
-        }
+        if (ctrl.onInit) ctrl.onInit(state, container, middlewareResult)
       }
     }
 
@@ -460,9 +459,8 @@ export class KLL {
         const middlewareResult = middlewares.cleanUp
           ? middlewares.cleanUp(state, container)
           : undefined
-        if (ctrl.cleanUp) {
-          ctrl.cleanUp(state, container, middlewareResult)
-        }
+        if (ctrl.cleanUp) ctrl.cleanUp(state, container, middlewareResult)
+
         this.cleanupCollection.push(container.cleanUp)
       }
     }
@@ -475,9 +473,7 @@ export class KLL {
         const middlewareResult = middlewares[method]
           ? await middlewares[method](state, e.target, e)
           : undefined
-        if (ctrl[method]) {
-          ctrl[method](state, e.target, e, middlewareResult)
-        }
+        if (ctrl[method]) ctrl[method](state, e.target, e, middlewareResult)
       }
 
       container._listeners[methodType] = helper
