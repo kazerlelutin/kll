@@ -253,12 +253,13 @@ export class KLL {
     container.kllId = kllId
     container.setAttribute("kll-id", kllId)
 
+    if (attrs.lId) container.lId = attrs.lId
+
     if (container.hasAttribute("kll-l")) {
-      const parentId = container.getAttribute("kll-id")
-      const children = container.querySelectorAll("[kll-*]")
+      const children = tElement.querySelectorAll("[kll-t], [kll-ctrl], [kll-tc], [kll-tm], [kll-m]")
 
       children.forEach((child) => {
-        child.setAttribute("kll-l-id", parentId)
+        child.setAttribute("kll-l-id", kllId)
       })
     }
 
