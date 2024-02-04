@@ -253,6 +253,15 @@ export class KLL {
     container.kllId = kllId
     container.setAttribute("kll-id", kllId)
 
+    if (container.hasAttribute("kll-l")) {
+      const parentId = container.getAttribute("kll-id")
+      const children = container.querySelectorAll("[kll-*]")
+
+      children.forEach((child) => {
+        child.setAttribute("kll-l-id", parentId)
+      })
+    }
+
     this.handleAttachMethods(container, attrs.middlewares, attrs.ctrl, container.state)
 
     container.getState = (id) => KLL.getState(id)
@@ -355,6 +364,7 @@ export class KLL {
       },
       attrs: {},
       kllId: null,
+      lId: null,
     }
 
     for (const attr of tElement.getAttributeNames()) {
@@ -362,6 +372,7 @@ export class KLL {
 
       if (attr.startsWith("kll-s")) {
         attrs.state.push({ [attr.slice(6)]: attrValue })
+        tElement.removeAttribute(attr)
       }
 
       if (attr === "kll-m") {
@@ -372,6 +383,11 @@ export class KLL {
         attrs.ctrl = await this.processCtrl(attrValue)
       } else if (attr === "kll-t") {
         attrs.template = await this.processTemplate(attrValue)
+      }
+
+      if (attr === "kll-l-id") {
+        attrs.lId = attrValue
+        tElement.removeAttribute(attr)
       }
 
       if (!attr.startsWith("kll-") || attr === "kll-b") {
@@ -507,5 +523,17 @@ export class KLL {
       })
     })
     return element
+  }
+
+  // === Helpers =============================================================
+
+  getLegacyElement(element) {
+    const parentId = element.lId
+    if (!parentId) return
+    return document.querySelector(`[kll-id='${parentId}']`)
+  }
+
+  getLegacyState(element) {
+    return this.getLegacyElement(element)?.state || {}
   }
 }
