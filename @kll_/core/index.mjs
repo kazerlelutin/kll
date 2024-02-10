@@ -208,7 +208,13 @@ export class KLL {
       } else if (ctrl) {
         kllId = ctrl
       }
+
+      kllId += `_${Math.random().toString(36).slice(2, 11)}`
     }
+
+    // Initialise l'ID du composant et l'attache à l'élément.
+    tElement.kllId = kllId
+
     // Protection contre les multiples initialisations (nested components)
     if (this.initsIds.includes(kllId)) return
 
@@ -243,15 +249,10 @@ export class KLL {
       container.setAttribute(attr, attrs.attrs[attr])
     }
 
-    if (this.initsIds.includes(container.kllId)) return
-
     container._listeners = {}
+    container.kllId = kllId
     // Initialise l'état et attache les méthodes du contrôleur.
     container.state = this.handleInitState(attrs.state, container, attrs.ctrl?.render)
-
-    // Initialise l'ID du composant et l'attache à l'élément.
-    container.kllId = kllId
-    container.setAttribute("kll-id", kllId)
 
     if (attrs.lId) container.lId = attrs.lId
 
@@ -266,6 +267,7 @@ export class KLL {
     this.handleAttachMethods(container, attrs.middlewares, attrs.ctrl, container.state)
 
     container.getState = (id) => KLL.getState(id)
+    container.setAttribute("kll-id", kllId)
 
     // Gère les éléments enfants si un slot est défini.
     if (container.querySelector("slot")) {
@@ -279,12 +281,12 @@ export class KLL {
     // Remplace l'élément original si un template est utilisé.
     if (attrs.template) {
       tElement.replaceWith(container)
-      await this.hydrateNestedComponents(this.sanitizeElement(container)) // Hydrater les composants imbriqués
+      await this.hydrateNestedComponents(container) // Hydrater les composants imbriqués
     }
 
     // Appelle la méthode onInit si elle est définie. Previent les appels multiples.
     container?.onInit?.()
-    this.initsIds.push(container.kllId)
+    this.initsIds.push(kllId)
   }
 
   async hydrateNestedComponents(element) {
