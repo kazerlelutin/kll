@@ -1,6 +1,6 @@
 {
   "name": "kll",
-  "version": "0.1.34",
+  "version": "0.1.35",
   "description": "monorepo for kll's projects",
   "type": "module",
   "esnext": "true",
