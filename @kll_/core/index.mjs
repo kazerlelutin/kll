@@ -398,7 +398,7 @@ export class KLL {
       }
     }
 
-    if (attrs.ctrl.state) {
+    if (attrs?.ctrl?.state) {
       // ceux qui proviennent du ctrl ne sont pas  prioritaires, ils seront écrasés par ceux qui proviennent de l'attribut kll-s
       attrs.state = [
         ...Object.keys(attrs.middlewares.state).map((k) => ({ [k]: attrs.ctrl.state[k] })),
