@@ -437,6 +437,7 @@ export class KLL {
 
   async processCtrl(name) {
     const ctrls = await this.ctrlPath
+    if (!ctrls?.[name]) return console.warn(`No controller found with name ${name}`)
     return ctrls[name]
   }
 
