@@ -420,13 +420,19 @@ export class KLL {
     if (!template) return console.warn(`No template found with name ${name}`)
     const el = document.createElement("div")
 
-    el.innerHTML = `<!-- START ${name} -->\n${template.default}\n<!-- END ${name} -->`
+    el.innerHTML = template.default
 
     const container = el.querySelector(`#${name}`).content
     const componentInstance = document.importNode(container, true)
     const containerParent = document.createElement("div")
     containerParent.appendChild(componentInstance)
-    return this.sanitizeElement(containerParent.firstElementChild)
+
+    const elToReturn = this.sanitizeElement(containerParent.firstElementChild)
+
+    elToReturn.prepend(document.createComment(` START ${name} `))
+    elToReturn.append(document.createComment(` END ${name} `))
+
+    return elToReturn
   }
 
   async processCtrl(name) {
